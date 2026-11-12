@@ -225,7 +225,9 @@ paper-reading-skills/
 ├── tests/
 │   ├── test_paper_reader.py     source fidelity, coverage, highlights, build
 │   └── test_paper_tutor.py      state, scheduling, export, no-overwrite
-├── docs/preview.png             demo screenshot used by the README
+├── docs/
+│   ├── index.html               live demo page (GitHub Pages)
+│   └── preview.png              demo screenshot used by the README
 ├── .github/workflows/tests.yml  CI: all tests on Python 3.9 / 3.12
 ├── README.md
 ├── README.en.md
@@ -237,7 +239,7 @@ paper-reading-skills/
 
 ## Demo
 
-The repository includes a **self-written teaching example** with no real paper or research result:
+The repository includes a **self-written teaching example** with no real paper or research result. Live demo: <https://Yuwangzhi.github.io/paper-reading-skills/>. Open it locally:
 
 Open `skills/paper-reader/assets/example.html` in a browser (on macOS you can run `open` on it).
 

@@ -223,7 +223,9 @@ paper-reading-skills/
 ├── tests/
 │   ├── test_paper_reader.py      原文保真、覆盖、高亮和构建检查
 │   └── test_paper_tutor.py       状态、排期、导出与不覆盖规则
-├── docs/preview.png              README 用演示截图
+├── docs/
+│   ├── index.html               在线演示页（GitHub Pages）
+│   └── preview.png              README 用演示截图
 ├── .github/workflows/tests.yml   CI：Python 3.9 / 3.12 跑全部测试
 ├── README.md
 ├── README.en.md
@@ -235,7 +237,7 @@ paper-reading-skills/
 
 ## 演示
 
-仓库自带一份**自写的教学示例**，不包含任何真实论文或研究结果：
+仓库自带一份**自写的教学示例**，不包含任何真实论文或研究结果。在线演示：<https://Yuwangzhi.github.io/paper-reading-skills/>。本地打开：
 
 用浏览器打开 `skills/paper-reader/assets/example.html`（macOS 可用 `open`，Windows 可双击文件）。
 
