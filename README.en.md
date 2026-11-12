@@ -167,14 +167,18 @@ Or:
 
 > Review yesterday's glossary cards, then leave me a one-page note. No webpage.
 
+> Pick up the paper from last time. Finish the question I left unanswered first.
+
 The session has seven stations: **locate → skeleton → one small block → one question → alternate explanation → review → one-page note**. Each explanation is roughly 200–300 Chinese characters, and only one question is asked before the answer is revealed.
+
+**Read across several sittings without starting over.** Your familiarity, your goal, each explained piece, the option you picked for each question, and your own wording are written to `精读会话.json` as they happen. Say "pick up where we left off" and the agent reads the record first, tells you where you stopped, brings back unanswered questions and due reviews, then continues from there. Questions you already answered are not asked again.
 
 Session files:
 
 ```text
 精读/                          # use 06_精读/ inside the paper-reader bundle above
-├── 精读会话.json              glossary, questions, answers, mistakes, review queue
-└── 精读笔记.md                exported one-page note
+├── 精读会话.json              profile, explained pieces, glossary, questions, answers, mistakes, review queue
+└── 精读笔记.md                one-page note; opens with where you stopped and is updated as you read
 ```
 
 Direct state-script use:
@@ -184,11 +188,14 @@ python3 skills/paper-tutor/scripts/reading_session.py init \
   --output-dir papers/FinTSB_2502.18834v3/精读 \
   --paper papers/FinTSB_2502.18834v3/01_原文/FinTSB.pdf --slug FinTSB --title "Paper title" --goal understand
 
+python3 skills/paper-tutor/scripts/reading_session.py resume --paper papers/FinTSB_2502.18834v3/01_原文/FinTSB.pdf
 python3 skills/paper-tutor/scripts/reading_session.py status --session papers/FinTSB_2502.18834v3/精读/精读会话.json
 python3 skills/paper-tutor/scripts/reading_session.py export --session papers/FinTSB_2502.18834v3/精读/精读会话.json
 ```
 
-`init` refuses to overwrite an existing session or note. `export` writes `精读笔记_自动生成.md` instead of overwriting an existing target unless `--force` is given. An existing reading note in the paper folder (`03_笔记/阅读笔记.md` in the bundle layout) is never modified by the tutoring script. Because `init` places an empty `精读笔记.md` template, the first export usually goes to `精读笔记_自动生成.md`; if you are sure the template was not edited by hand, pass `--force` to overwrite it.
+`resume` is read-only and prints a briefing for the new sitting: the current station, the pieces already explained, unanswered questions, reviews that are due, and any profile question not asked yet. `--paper` looks for the session in `06_精读/` or `精读/` next to the paper. A session that was interrupted and never exported still brings back due questions, dated from the last answer plus 1 / 3 / 7 days.
+
+`init` refuses to overwrite an existing session or note. While `精读笔记.md` has not been edited by hand, every write and `export` update it in place; once you edit it, the script leaves it alone and `export` writes `精读笔记_自动生成.md` instead, unless `--force` is given. An existing reading note in the paper folder (`03_笔记/阅读笔记.md` in the bundle layout) is never modified by the tutoring script. Sessions saved by 1.0.0 resume as they are.
 
 The skill's default folder and file names are Chinese because it targets Chinese-speaking readers. Change them only if you update the references and scripts as well.
 
@@ -253,7 +260,7 @@ Its build sources are `skills/paper-reader/assets/example-source.json` and `exam
 python3 -m unittest discover -s tests -v
 ```
 
-Coverage includes: source-digest change detection, block-ID coverage, five-class highlighting that does not alter the original, mandatory human-review basis for a "full text" label, tutoring state updates and review scheduling, and no-overwrite export rules. **Passing tests do not prove translation accuracy or teaching quality.** Semantic and visual checks remain manual.
+Coverage includes: source-digest change detection, block-ID coverage, five-class highlighting that does not alter the original, mandatory human-review basis for a "full text" label, tutoring state updates and review scheduling, per-turn recording and the resume briefing, compatibility with older sessions, and no-overwrite export rules. **Passing tests do not prove translation accuracy or teaching quality.** Semantic and visual checks remain manual.
 
 ---
 

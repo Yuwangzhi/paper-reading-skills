@@ -63,9 +63,14 @@ class PaperTutor(unittest.TestCase):
                              "--options", " A | B | C ", "--answer", 2)
         return output.strip()
 
-    def record(self, qid, result="wrong", confidence="low", note=""):
+    def record(self, qid, result="wrong", confidence="low", note="", choice=None):
+        extra = () if choice is None else ("--choice", choice)
         return self.cli("record", "--session", self.session, "--id", qid,
-                        "--result", result, "--confidence", confidence, "--note", note)
+                        "--result", result, "--confidence", confidence, "--note", note, *extra)
+
+    def resume(self, *source):
+        output, _ = self.cli("resume", *(source or ("--session", self.session)))
+        return json.loads(output)
 
     def test_init_creates_seven_stations_and_empty_note_without_inventing_answers(self):
         self.init()
@@ -205,6 +210,7 @@ class PaperTutor(unittest.TestCase):
 
     def test_export_no_overwrite_numbered_fallback_custom_target_and_force(self):
         self.init()
+        self.note.write_text("自己改过的笔记", encoding="utf-8")
         before = self.note.read_bytes()
         first, error = self.cli("export", "--session", self.session)
         second, _ = self.cli("export", "--session", self.session)
@@ -305,8 +311,147 @@ class PaperTutor(unittest.TestCase):
         self.assertEqual(self.session.read_bytes(), before)
         self.assertEqual(blocker.read_text(encoding="utf-8"), "keep")
 
+    def test_each_turn_is_recorded_and_the_note_follows_without_export(self):
+        self.init()
+        self.cli("profile", "--session", self.session, "--familiarity", "读过但忘了", "--paper-version", "v2")
+        self.cli("station", "--session", self.session, "--id", 0, "--status", "done",
+                 "--memory-point", "先读 §3 和表 4")
+        output, _ = self.cli("cover", "--session", self.session, "--station", 2, "--location", "§3.3 表 2",
+                             "--point", "SC 要先找错再改错", "--user-words", "像校对")
+        self.assertEqual(output.strip(), "C-001")
+        for _ in range(2):  # repeating a command must not duplicate the entry
+            self.cli("note", "--session", self.session, "--claim", "我的说法", "--chain-gap", "缺口",
+                     "--add-evidence", "表 4", "--add-open-question", "换数据集呢？")
+        state = self.state()
+        self.assertEqual((state["familiarity"], state["paper"]["version"]), ("读过但忘了", "v2"))
+        self.assertEqual(state["stations"][0]["status"], "done")
+        self.assertEqual((state["current_station"], state["stations"][2]["status"]), (2, "in_progress"))
+        self.assertEqual(state["covered"][0]["point"], "SC 要先找错再改错")
+        self.assertEqual((state["notes"]["evidence"], state["notes"]["open_questions"]), (["表 4"], ["换数据集呢？"]))
+        self.assertEqual(state["notes"]["argument_chain"]["gap"], "缺口")
+        text = self.note.read_text(encoding="utf-8")
+        for value in ("读到「一小块」", "已讲 1 小块", "读过但忘了", "§3.3 表 2", "像校对",
+                      "先读 §3 和表 4", "我的说法", "换数据集呢？"):
+            self.assertIn(value, text)
+        self.assertEqual([line for line in text.splitlines() if line.startswith("## ")],
+                         ["## " + heading for heading in HEADINGS])
+
+    def test_record_choice_is_kept_and_a_contradiction_is_rejected(self):
+        self.init()
+        qid = self.question(2)
+        before = self.session.read_bytes()
+        for choice, result in ((2, "wrong"), (1, "correct")):  # the stored key is 2
+            self.cli("record", "--session", self.session, "--id", qid, "--result", result,
+                     "--confidence", "low", "--choice", choice, ok=False)
+            self.assertEqual(self.session.read_bytes(), before)
+        self.record(qid, "wrong", "low", "把误报当成漏报", choice=1)
+        self.record(qid, "correct", "high", choice=2)
+        question = self.state()["question_log"][0]
+        self.assertEqual(question["user_answer"], 2)
+        self.assertEqual([attempt["choice"] for attempt in question["attempts"]], [1, 2])
+
+    def test_resume_is_read_only_and_says_what_not_to_ask_again(self):
+        self.init()
+        self.cli("profile", "--session", self.session, "--familiarity", "没看过")
+        self.cli("cover", "--session", self.session, "--station", 1, "--location", "摘要", "--point", "骨架")
+        wrong, right, open_question = self.question(1), self.question(1), self.question(2)
+        self.record(wrong, "wrong", "low", choice=1)
+        self.record(right, "correct", "high", choice=2)
+        before = self.session.read_bytes(), self.note.read_bytes()
+        view = self.resume()
+        self.assertEqual(view, self.resume("--paper", self.paper))
+        self.assertEqual((self.session.read_bytes(), self.note.read_bytes()), before)
+        self.assertEqual(view["missing_profile"], [])
+        self.assertEqual((view["goal"], view["familiarity"], view["current_station"]), ("能讲清楚", "没看过", 2))
+        self.assertEqual([row["question_id"] for row in view["unanswered"]], [open_question])
+        self.assertEqual([(row["question_id"], row["reason"]) for row in view["due_reviews"]],
+                         [(wrong, "wrong_or_shaky")])
+        self.assertEqual(view["later_reviews"], 1)
+        self.assertEqual(view["paper_file"], str(self.paper.resolve()))
+        steps = "\n".join(view["next_steps"])
+        for value in ("不运行 init", "不再问熟悉程度和阅读目标", open_question, wrong, "不重讲"):
+            self.assertIn(value, steps)
+
+    def test_resume_brings_back_reviews_by_date_when_the_session_was_never_exported(self):
+        self.init()
+        qid = self.question(2)
+        self.record(qid, "correct", "high", choice=2)
+        self.assertEqual(self.resume()["due_reviews"], [])
+        state = self.state()
+        state["question_log"][0]["attempts"][0]["recorded_at"] = (
+            date.today() - timedelta(days=7)).isoformat() + "T09:00:00"
+        self.write_state(state)
+        row = self.resume()["due_reviews"][0]
+        self.assertEqual((row["question_id"], row["reason"], row["due_date"]),
+                         (qid, "date", date.today().isoformat()))
+
+    def test_resume_finds_a_sibling_session_and_a_moved_paper_and_fails_readably_without_one(self):
+        self.cli("resume", "--paper", self.paper, ok=False)
+        self.cli("resume", ok=False)
+        self.output = self.root / "精读"
+        self.session, self.note = self.output / tutor.SESSION_NAME, self.output / tutor.NOTE_NAME
+        self.init()
+        self.assertEqual(self.resume("--paper", self.paper)["session"], str(self.session.resolve()))
+        state = self.state()
+        state["paper"]["path"] = "D:\\documents\\papers\\演示.html"  # saved on another machine
+        self.write_state(state)
+        view = self.resume()
+        self.assertEqual(Path(view["paper_file"]), self.paper)
+        self.assertEqual(view["missing_profile"], ["familiarity"])
+
+    def test_session_saved_before_these_fields_resumes_and_its_untouched_note_is_refreshed(self):
+        self.init()
+        self.cli("add-glossary", "--session", self.session, "--term", "SC", "--definition", "定义", "--plain", "人话")
+        qid = self.question(1)
+        self.record(qid, "correct", "medium")
+        state = self.state()
+        for key in ("familiarity", "covered", "note_digest"):
+            del state[key]
+        blank = {**state, "glossary": [], "review_queue": [], "question_log": []}
+        self.note.write_text(tutor.render_note(blank, progress=False), encoding="utf-8")  # the old empty template
+        self.write_state(state)
+        view = self.resume()
+        self.assertEqual((view["covered"], view["missing_profile"]), ([], ["familiarity"]))
+        self.assertIn("没有记下讲过哪些小块", "\n".join(view["next_steps"]))
+        self.cli("profile", "--session", self.session, "--familiarity", "读过但忘了")
+        text = self.note.read_text(encoding="utf-8")
+        self.assertIn("**SC**", text)
+        self.assertIn("已答 1 / 1 题", text)
+
+    def test_hand_edited_note_is_never_touched_and_export_writes_a_copy(self):
+        self.init()
+        self.note.write_text(self.note.read_text(encoding="utf-8") + "\n我自己加的一行\n", encoding="utf-8")
+        before = self.note.read_bytes()
+        _, error = self.cli("profile", "--session", self.session, "--familiarity", "比较熟")
+        self.assertIn("left untouched", error)
+        path, _ = self.cli("export", "--session", self.session)
+        self.assertEqual(Path(path.strip()).name, "精读笔记_自动生成.md")
+        self.assertEqual(self.note.read_bytes(), before)
+        self.assertEqual(self.state()["familiarity"], "比较熟")
+
+    def test_untouched_note_is_refreshed_in_place_by_export_even_after_a_manual_json_edit(self):
+        self.init()
+        state = self.state()
+        state["notes"]["claim"] = "直接改 JSON 写入的主张"
+        self.write_state(state)
+        path, error = self.cli("export", "--session", self.session)
+        self.assertEqual((Path(path.strip()), error), (self.note, ""))
+        self.assertIn("直接改 JSON 写入的主张", self.note.read_text(encoding="utf-8"))
+        self.assertEqual(list(self.output.iterdir()).__len__(), 2)
+
+    def test_new_commands_reject_bad_input_without_saving(self):
+        self.init()
+        before = self.session.read_bytes()
+        for args in (("profile",), ("note",), ("station", "--id", 0), ("station", "--id", 7, "--status", "done"),
+                     ("station", "--id", 0, "--status", "finished"), ("note", "--add-evidence", " "),
+                     ("cover", "--station", 9, "--location", "§1", "--point", "P"),
+                     ("cover", "--station", 1, "--location", " ", "--point", "P")):
+            self.cli(args[0], "--session", self.session, *args[1:], ok=False)
+            self.assertEqual(self.session.read_bytes(), before)
+
     def test_help_and_each_subcommand_help_return_zero_headlessly(self):
-        commands = ("init", "status", "add-glossary", "add-question", "record", "review", "export")
+        commands = ("init", "resume", "status", "profile", "station", "cover", "note",
+                    "add-glossary", "add-question", "record", "review", "export")
         for command in (None, *commands):
             result = subprocess.run([sys.executable, str(SCRIPT), *([command] if command else []), "--help"],
                                     capture_output=True, encoding="utf-8", timeout=15)
@@ -318,7 +463,7 @@ class PaperTutor(unittest.TestCase):
 
     def test_script_uses_only_standard_library_and_python_39_syntax(self):
         tree = ast.parse(SCRIPT.read_text(encoding="utf-8"), feature_version=(3, 9))
-        allowed = {"__future__", "argparse", "datetime", "json", "pathlib", "re", "sys"}
+        allowed = {"__future__", "argparse", "datetime", "hashlib", "json", "pathlib", "re", "sys"}
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 self.assertTrue(all(alias.name.split(".")[0] in allowed for alias in node.names))

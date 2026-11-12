@@ -1,7 +1,7 @@
 {
   "name": "paper-reading",
   "description": "Bilingual annotated paper reading and interactive tutoring: build a source-faithful offline HTML reader, or read a paper together one question at a time.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Yuwangzhi",
     "url": "https://github.com/Yuwangzhi"

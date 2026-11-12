@@ -79,6 +79,20 @@
 
 优先保留用户自己的说法和实际答题记录。未记录写“暂未记录”，不能自动填充论文结论或假造理解。带读者在导出前精简内容；Markdown 是一页式提纲，不保证任意长度记录打印后恰好一页。
 
+### 2.8 接着读：先读记录，不重问
+
+带读常分几次完成。每次开场先运行 `resume`，有会话就续读，不运行 `init`、不重走已完成的步骤：
+
+1. 用两三句话告诉用户上次读到哪、记住了什么（`current_station`、`covered`、各站记忆点）。
+2. `missing_profile` 为空时不再问熟悉程度和阅读目标；有缺项只补问缺的，问完用 `profile` 记下。
+3. `unanswered` 的题原样再问一次，答完用 `record --choice` 记录。
+4. `due_reviews` 一次回顾一道：答错或不稳的排最前，其次是按日期到期的。
+5. `covered` 里讲过的小块不重讲，用户说忘了才简短回顾；然后从 `current_station` 接着走。
+
+旧会话没有 `covered` 记录时，照实告诉用户“上次讲过哪些小块没有记下来”，请其用一两句话说说还记得什么，再决定从哪接；不默认从头讲，也不补写没发生过的记录。记录里的论文路径在本机找不到时，先请用户确认论文文件。
+
+要让下次接得上，每一步发生后立刻写入，不等会话结束：校准回答用 `profile`，讲完一小块用 `cover`，术语卡用 `add-glossary`，出题用 `add-question`，作答用 `record --choice`，用户自己的主张、五环、证据、质疑和待问用 `note`，一站走完或有了记忆点用 `station`。
+
 ## 3. 说话方式：说人话（硬规则）
 
 短句、少术语。术语第一次出现，先给论文定义，再给一句人话，再给一个例子；不要只丢缩写。一次讲解不超过 300 个中文字符，除非用户说“展开”。不要堆“论证链”“可核查性”“逻辑角色”“检索”“间隔重复”“门控”等词；确需使用，先用一句人话解释。不替用户总结弱点，先问，再揭示。不一次输出整篇论文的总结。
@@ -121,11 +135,11 @@
 
 ```text
 精读/
-├── 精读会话.json      # 术语卡、题目、复习队列、回答与错题
-└── 精读笔记.md        # 导出的一页式笔记
+├── 精读会话.json      # 校准、已讲小块、术语卡、题目、回答、错题与复习队列
+└── 精读笔记.md        # 一页式笔记，开头是“读到哪了”；每次写入后自动更新
 ```
 
-不覆盖论文文件夹里已有的阅读笔记（归档结构中为 `03_笔记/阅读笔记.md`）。`init` 拒绝覆盖已有会话或笔记。`export` 的目标已存在且没有 `--force` 时，改写到同目录 `精读笔记_自动生成.md` 并提示实际路径；该文件也存在时用 `精读笔记_自动生成_2.md` 等顺延，仍不覆盖。只有显式 `--force` 才覆盖所选笔记；状态与原论文不能作为导出目标。
+不覆盖论文文件夹里已有的阅读笔记（归档结构中为 `03_笔记/阅读笔记.md`）。`init` 拒绝覆盖已有会话或笔记，已有会话用 `resume` 续读。`精读笔记.md` 归谁改由内容决定：会话里的 `note_digest` 记着脚本上次写出的内容摘要，文件与之一致（或仍是旧版空模板、旧版完整导出）时，每条写入命令和 `export` 都原地更新它；用户手改之后摘要不再一致，脚本不再动它，并在 stderr 提示。此时 `export` 改写到同目录 `精读笔记_自动生成.md` 并提示实际路径；该文件也存在时用 `精读笔记_自动生成_2.md` 等顺延，仍不覆盖。其他已存在的导出目标同样不覆盖。只有显式 `--force` 才覆盖所选笔记；状态与原论文不能作为导出目标。
 
 ### 状态 JSON（version 1）
 
@@ -136,11 +150,16 @@
   "version": 1,
   "paper": {"title": "", "slug": "", "path": "", "version": ""},
   "goal": "",
+  "familiarity": "",
+  "note_digest": "",
   "created_at": "2026-11-12T00:00:00",
   "updated_at": "2026-11-12T00:00:00",
   "current_station": 0,
   "stations": [
     {"id": 0, "name": "定位", "status": "pending", "memory_point": ""}
+  ],
+  "covered": [
+    {"id": "C-001", "station": 2, "location": "", "point": "", "user_words": "", "recorded_at": ""}
   ],
   "glossary": [
     {"id": "G-001", "term": "", "definition": "", "plain": "", "example": "", "review_question": ""}
@@ -158,25 +177,34 @@
 }
 ```
 
-初始化实际有 7 个 station：0 定位、1 骨架、2 一小块、3 小题、4 换讲法、5 复习、6 一页笔记。状态用 UTF-8 保存；不推断未确认的 `paper.version`。`add-question --station` 设置 `current_station`，标记该站进行中，但不自动声明之前的站已完成。`status` 与 `review` 只读，查询其他站不会推进进度。恢复会话时由带读者核对并更新实际 `current_station`（0–6），复习旧题的排期仍以它为准，而非该题最初的站号。
+初始化实际有 7 个 station：0 定位、1 骨架、2 一小块、3 小题、4 换讲法、5 复习、6 一页笔记。状态用 UTF-8 保存；不推断未确认的 `paper.version`。`add-question --station` 与 `cover --station` 设置 `current_station` 并标记该站进行中，但不自动声明之前的站已完成；完成状态和记忆点用 `station` 写入，`station --status in_progress` 也会把当前站移到该站。`resume`、`status` 与 `review` 只读，查询不会推进进度。复习旧题的排期以实际 `current_station` 为准，而非该题最初的站号。
 
-保留基本 schema，增加两个可选补充字段：`notes.argument_chain` 手动记五环；每题 `attempts` 追加真实记录（`result`、`confidence`、`note`、`station`、`recorded_at`），保留先错后对的历史，旧版状态无这些字段也可读。CLI 没有收集选项编号的参数，所以 `record` 不猜 `user_answer`；带读者把实际所选项、错误原因和待核实内容写进 `--note`，必要时在 JSON 中填写真实 `user_answer`。`correct` 为 true / false / null（不稳或未答），不得把不稳伪报为确定答错。笔记内容、版本、各站记忆点与完成状态由带读者基于实际对话更新 JSON；脚本不代写、不判定掌握。
+保留 version 1 的基本 schema，补充字段全部可选，旧版状态没有它们也可读、可续读：`notes.argument_chain` 记五环；每题 `attempts` 追加真实记录（`result`、`confidence`、`note`、`station`、`recorded_at`，有 `--choice` 时加 `choice`），保留先错后对的历史；`familiarity` 记熟悉程度；`covered` 记讲过的小块（位置、要点、用户自己的说法）；`note_digest` 记脚本上次写出的笔记摘要。`record --choice` 把用户实际选的数字写入 `user_answer` 和该次 `choice`；它与 `--result correct|wrong` 矛盾时命令失败、不写入，`shaky` 不做此检查。用户没给数字就不传 `--choice`，`user_answer` 保持 `null`，不猜；错误原因和待核实内容写进 `--note`。`correct` 为 true / false / null（不稳或未答），不得把不稳伪报为确定答错。笔记内容、版本、各站记忆点与完成状态由带读者基于实际对话用 `note`、`profile`、`station` 写入；脚本不代写、不判定掌握。
 
 ### 精确命令接口
 
 ```bash
 python reading_session.py init --output-dir <dir> --paper <pdf-or-html> --slug <slug> [--title <title>] [--goal <goal>]
+python reading_session.py resume (--paper <pdf-or-html> | --session <json>)
 python reading_session.py status --session <json>
+python reading_session.py profile --session <json> [--familiarity <text>] [--goal <text>] [--paper-version <text>]
+python reading_session.py station --session <json> --id <0-6> [--status pending|in_progress|done] [--memory-point <text>]
+python reading_session.py cover --session <json> --station <int> --location <text> --point <text> [--user-words <text>]
+python reading_session.py note --session <json> [--claim <text>] [--chain-question|--chain-gap|--chain-design|--chain-evidence|--chain-boundary <text>] [--add-evidence <text>] [--add-caveat <text>] [--add-borrow <text>] [--add-open-question <text>]
 python reading_session.py add-glossary --session <json> --term <term> --definition <text> --plain <text> [--example <text>] [--review-question <text>]
 python reading_session.py add-question --session <json> --station <int> --concept <text> --question <text> --options "A|B|C" --answer <1|2|3>
-python reading_session.py record --session <json> --id <question-id> --result correct|wrong|shaky --confidence high|medium|low [--note <text>]
+python reading_session.py record --session <json> --id <question-id> --result correct|wrong|shaky --confidence high|medium|low [--choice <1|2|3>] [--note <text>]
 python reading_session.py review --session <json> --station <int>
 python reading_session.py export --session <json> [--output <md>] [--force]
 ```
 
 实际调用用 `skills/paper-tutor/scripts/reading_session.py` 的可用路径；通用示例不写死机器路径。`init` 创建状态与含七个标题的空笔记；`add-glossary` 返回 G-001 起的 ID；`add-question` 返回 Q-001 起的 ID，同时创建 R-001 起的复习条目。新题尚未作答，可在其所在站首次提问，不假造结果。
 
-`record` 更新题目的最新结果，并追加回答历史和对应复习条目。`review` 以 JSON 数组返回 `next_station <= --station` 的条目，按 `priority` 降序，同优先级按到期站号和 ID 排；`--station` 为非负整数，可查看会后站号。跨日重读时另外核对状态中的 `next_date`，CLI 的此命令只按站号筛选。`status` 输出完整 JSON 状态。命令失败返回非 0、在 stderr 给可读错误；不会静默成功。
+`record` 更新题目的最新结果，并追加回答历史和对应复习条目。`cover` 返回 C-001 起的 ID。`note` 的 `--claim` 与 `--chain-*` 覆盖原值，`--add-*` 可重复、逐条追加，重复执行同一条命令不产生重复条目。`profile`、`station`、`note` 至少要给一个字段，否则失败。`review` 以 JSON 数组返回 `next_station <= --station` 的条目，按 `priority` 降序，同优先级按到期站号和 ID 排；`--station` 为非负整数，可查看会后站号，此命令只按站号筛选。`status` 输出完整 JSON 状态。命令失败返回非 0、在 stderr 给可读错误；不会静默成功。
+
+`resume` 只读，输出一份续读简报（JSON）：`paper` 与本机实际找到的 `paper_file`（记录的路径失效时，在会话文件夹及其上一级按文件名找，另一台电脑存下的路径也能对上）、`goal`、`familiarity`、`missing_profile`（还没问到的校准项）、`current_station`、`stations`、`covered`、`unanswered`（出了还没答的题）、`due_reviews`、`later_reviews`（尚未到期的题数）、`glossary_terms`、`empty_notes`（一页笔记里还空着的部分）和 `next_steps`（本次开场该做什么的中文提示）。`--paper` 依次在论文同目录的 `06_精读/`、`精读/` 找会话，找不到则失败并提示用 `init`。
+
+`due_reviews` 每条带 `reason`：`wrong_or_shaky`（上次答错或不稳，始终带回）、`date`（按日期到期）、`station`（按站号到期）。日期取已导出的 `next_date`；没有导出过时，用上次作答时间加排期表里的 1 / 3 / 7 天，所以中途中断、从未 `export` 的会话隔几天再读也会带回到期的题。
 
 ### 复习排期表
 
@@ -190,13 +218,20 @@ python reading_session.py export --session <json> [--output <md>] [--force]
 | correct + medium | current + 3 | 0 | 3 天 |
 | correct + high | current + 5 | -1 | 7 天 |
 
-`record` 先排 `next_station`，清空旧的 `next_date`。结束时运行 `export`，为已回答且尚无日期的条目按当天本地日期填 `next_date`；重复导出保留既有日期，不推迟复习。未答题不生成日期。站号可超过最后一站，不强行缩短高把握题的间隔；会后按日期继续复习。不稳用 `shaky`，答对低把握用 `correct + low`，二者不混用。
+`record` 先排 `next_station`，清空旧的 `next_date`。结束时运行 `export`，为已回答且尚无日期的条目按当天本地日期填 `next_date`；重复导出保留既有日期，不推迟复习。未答题不生成日期。没有导出就中断的会话，`resume` 按上次作答时间推算日期，不写入状态。站号可超过最后一站，不强行缩短高把握题的间隔；会后按日期继续复习。不稳用 `shaky`，答对低把握用 `correct + low`，二者不混用。
 
 ## 5. 一页笔记导出格式
 
-导出 Markdown 必须包含以下七个二级标题，空内容写“暂未记录”：
+笔记标题下先有一段“读到哪了”（进度、目标与熟悉程度、已讲小块、各站记忆点），供下次续读时一眼看到；随后必须包含以下七个二级标题，空内容写“暂未记录”：
 
 ```markdown
+**读到哪了**（下次说“接着读”，从这里接上，不重问已答过的问题）
+- 进度：读到「一小块」；已讲 1 小块；已答 1 / 2 题
+- 目标：能讲清楚；熟悉程度：读过但忘了
+- 已讲：
+  - 「一小块」§3.3 表 2：SC 要先找错再改错（我的说法：像校对）
+- 记忆点：暂未记录
+
 ## 一句话主张
 暂未记录
 
@@ -226,4 +261,4 @@ python reading_session.py export --session <json> [--output <md>] [--force]
 
 ## 6. 验证边界
 
-`tests/test_paper_tutor.py` 和 skill-phase 验证脚本检查文件结构、状态更新、排期、导出与不覆盖规则。触发提示是待执行行为案例；程序通过不等于模型带读质量、问题质量、翻译正确性或用户掌握情况已被独立评测。
+`tests/test_paper_tutor.py` 和 skill-phase 验证脚本检查文件结构、状态更新、逐轮记录、续读简报、按日期带回复习、旧会话兼容、排期、导出与不覆盖规则。触发提示是待执行行为案例；程序通过不等于模型带读质量、问题质量、翻译正确性或用户掌握情况已被独立评测。

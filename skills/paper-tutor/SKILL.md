@@ -13,6 +13,31 @@ description: "Guide interactive paper reading through short explanations, one qu
 - 如果同时使用本仓库的 [paper-reader](../paper-reader/SKILL.md)，原 PDF、双语批注 HTML、笔记、生成源与检查的配套文件夹由它制作。可以先生成 HTML 再带读，也可以先带读再按需制作配套文件夹；不要自动扩展用户要求。
 - 只要求“做成 HTML/PDF/批注页”的请求转给 reader；只要求润色或投稿审查的请求不运行带读。
 
+## 接着读：先读记录，不重问
+
+每次开场先运行 `resume`：`--paper <论文文件>` 会在论文旁找 `06_精读/` 或 `精读/`，也可用 `--session <json>`。找到会话就续读，不运行 `init`，按返回的 `next_steps` 走：
+
+- 用两三句话告诉用户上次读到哪、记住了什么。`missing_profile` 为空时不再问熟悉程度和阅读目标；有缺项只补问缺的。
+- `unanswered` 里的题原样再问一次；`due_reviews` 一次回顾一道；`covered` 里讲过的小块不重讲，用户说忘了才简短回顾。然后从 `current_station` 接着走。
+- 旧会话没有 `covered` 时照实说明，请用户用一两句话说说还记得什么，再决定从哪接；不补写没发生过的记录。
+- 找不到会话才 `init`，从第 1 步开始。
+
+## 每轮都记，不等结束
+
+对话可能随时中断，所以每一步发生后立刻写入，下次才接得上：
+
+| 发生了什么 | 命令 |
+|---|---|
+| 用户回答熟悉程度、阅读目标，或核对了论文版本 | `profile` |
+| 讲完一小块 | `cover`（位置、要点、用户自己的说法） |
+| 给出术语卡 | `add-glossary` |
+| 出题（提问之前） | `add-question` |
+| 用户作答 | `record --choice <用户选的数字>` |
+| 用户说出主张、五环、证据、质疑、可借鉴或待问 | `note` |
+| 一站走完，或有了记忆点 | `station --status done --memory-point <一句话>` |
+
+`精读笔记.md` 在每次写入后自动更新，开头的“读到哪了”就是续读入口；用户手改过笔记后脚本不再改动它。只记真实发生的对话，不代写用户的理解。
+
 ## 七步会话：一次只问一道，等回答再走
 
 1. **定位**：用“必精读 / 扫读 / 可跳”小表说明该看哪几块、为什么。只问一个校准问题，让用户选熟悉程度与读完希望做到什么。
@@ -39,16 +64,21 @@ description: "Guide interactive paper reading through short explanations, one qu
 └── 精读笔记.md
 ```
 
-不覆盖论文文件夹里已有的阅读笔记（paper-reader 归档中的 `03_笔记/阅读笔记.md`）。`init` 拒绝覆盖已有会话或笔记；`export` 默认遇到已有目标就写 `精读笔记_自动生成.md`，再遇冲突则编号顺延，并打印实际路径。只有显式 `--force` 才覆盖所选导出笔记，不可用状态或原论文作导出目标。
+不覆盖论文文件夹里已有的阅读笔记（paper-reader 归档中的 `03_笔记/阅读笔记.md`）。`init` 拒绝覆盖已有会话或笔记，已有会话用 `resume` 续读。`精读笔记.md` 未被手改时由脚本原地更新；手改过的笔记不动，`export` 改写 `精读笔记_自动生成.md`，再遇冲突则编号顺延，并打印实际路径。只有显式 `--force` 才覆盖所选导出笔记，不可用状态或原论文作导出目标。
 
 ```bash
 python <skill目录>/scripts/reading_session.py init --output-dir <论文文件夹>/精读 --paper <pdf-or-html> --slug <slug> --title <title> --goal 能讲清楚
+python <skill目录>/scripts/reading_session.py resume --paper <pdf-or-html>
+python <skill目录>/scripts/reading_session.py profile --session <json> --familiarity 读过但忘了 --goal 能讲清楚
+python <skill目录>/scripts/reading_session.py cover --session <json> --station 2 --location <章节/图表/锚点> --point <讲了什么> --user-words <用户的说法>
+python <skill目录>/scripts/reading_session.py note --session <json> --claim <text> --chain-gap <text> --add-evidence <text> --add-open-question <text>
+python <skill目录>/scripts/reading_session.py station --session <json> --id 1 --status done --memory-point <text>
 python <skill目录>/scripts/reading_session.py status --session <json>
 python <skill目录>/scripts/reading_session.py add-glossary --session <json> --term <term> --definition <text> --plain <text> --example <text> --review-question <text>
 python <skill目录>/scripts/reading_session.py add-question --session <json> --station 2 --concept <text> --question <含论文位置的题目> --options "A|B|C" --answer 2
-python <skill目录>/scripts/reading_session.py record --session <json> --id Q-001 --result wrong --confidence low --note <实际选项和错误原因>
+python <skill目录>/scripts/reading_session.py record --session <json> --id Q-001 --result wrong --confidence low --choice 1 --note <错误原因>
 python <skill目录>/scripts/reading_session.py review --session <json> --station 3
 python <skill目录>/scripts/reading_session.py export --session <json>
 ```
 
-阶段 ID 为 0–6；`add-question --station` 更新当前阶段，`status`、`review` 只读。排期以实际 `current_station` 为准；恢复会话时先核对该值。`record` 没有选项编号参数，不猜用户选择；把实际选择写进 `--note`。`review` 返回到期条目的 JSON，不直接把整批题发给用户；跨日复习另核对 `next_date`。结束时 `export` 补上 1 / 3 / 7 天的日期，重复导出不推迟已有日期。基于真实对话维护 JSON 中的主张、五环、证据、待问清单、记忆点与完成状态，再导出一页式提纲；脚本不代写这些内容。完整 CLI、状态 schema、排期与导出规则见参考。
+阶段 ID 为 0–6；`add-question`、`cover` 和 `station --status in_progress` 更新当前阶段，`resume`、`status`、`review` 只读。排期以实际 `current_station` 为准。`record --choice` 保存用户实际选的数字，与 `--result` 矛盾时拒绝写入；用户没给数字就不填，不猜。`review` 按站号返回到期条目；跨日续读用 `resume`，它按上次作答时间加 1 / 3 / 7 天算出到期题，不依赖是否导出过。结束时 `export` 把日期写入会话，重复导出不推迟已有日期。主张、五环、证据、待问清单、记忆点与完成状态用 `note`、`station` 按真实对话写入；脚本不代写这些内容。完整 CLI、状态 schema、排期与导出规则见参考。
