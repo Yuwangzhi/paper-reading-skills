@@ -1,0 +1,4 @@
+interface:
+  display_name: "交互式精读"
+  short_description: "一问一答带读论文：阅读地图、术语卡、小题、复习与一页笔记"
+  default_prompt: "使用 $paper-tutor，带我逐块读这篇论文；一次只讲一小块、问一道 1/2/3 小题，最后留一页我自己的笔记。"

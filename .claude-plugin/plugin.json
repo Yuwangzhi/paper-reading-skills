@@ -1,0 +1,19 @@
+{
+  "name": "paper-reading",
+  "description": "Bilingual annotated paper reading and interactive tutoring: build a source-faithful offline HTML reader, or read a paper together one question at a time.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Yuwangzhi",
+    "url": "https://github.com/Yuwangzhi"
+  },
+  "homepage": "https://github.com/Yuwangzhi/paper-reading-skills",
+  "repository": "https://github.com/Yuwangzhi/paper-reading-skills",
+  "license": "CC-BY-SA-4.0",
+  "keywords": [
+    "paper-reading",
+    "bilingual",
+    "annotated-html",
+    "interactive-reading",
+    "spaced-review"
+  ]
+}

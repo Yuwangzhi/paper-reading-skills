@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "mode": "demo",
+  "title": "From Forecast Accuracy to Decision Reliability",
+  "title_zh": "从预测精度走向决策可靠性：如何读一条论证链",
+  "course": "论文精读 / 论证结构演示",
+  "source": {
+    "version": "Original teaching demo v1",
+    "url": "",
+    "sha256": ""
+  },
+  "review": {
+    "status": "verified",
+    "basis": "自写排版与论证教学示例；全部文字与示意图均非外部论文，无研究效果数据。"
+  },
+  "sections": [
+    {
+      "id": "motivation",
+      "title": "01 Motivation / 问题与主张",
+      "blocks": [
+        {
+          "id": "p1",
+          "kind": "paragraph",
+          "locator": "自写示例 ¶1",
+          "html": "<p>A forecast can be accurate while the decision built on it is unreliable. A small timing error near a load peak may change which action is feasible, even when its contribution to average forecast error is modest.</p>",
+          "text_sha256": "d539195a64837e14698cb58b6fd21dd55c8b77b4ae8f987f1d124ea021c2221a"
+        },
+        {
+          "id": "p2",
+          "kind": "paragraph",
+          "locator": "自写示例 ¶2",
+          "html": "<p>We argue that evaluation should connect forecast errors to the decisions they support. An <em>event-conditioned evaluation</em> separates ordinary intervals from decision-critical events and makes this connection explicit.</p>",
+          "text_sha256": "66102f17894ead023dfcbf3f7b4ae7639a78c7aad9c8eed44cafdd16dacd748f"
+        },
+        {
+          "id": "framework",
+          "kind": "figure",
+          "locator": "自写示意图，无实验数据",
+          "html": "<figure><svg viewBox=\"0 0 660 128\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"4\" y=\"20\" width=\"180\" height=\"72\" rx=\"5\" fill=\"#e4eaf0\"/><text x=\"94\" y=\"51\" text-anchor=\"middle\" font-size=\"16\" fill=\"#29485f\">Forecast</text><text x=\"94\" y=\"74\" text-anchor=\"middle\" font-size=\"12\" fill=\"#617a8b\">available information</text><path d=\"M194 55 H224 L218 50 M224 55 L218 60\" fill=\"none\" stroke=\"#8d9a9a\" stroke-width=\"2\"/><rect x=\"234\" y=\"20\" width=\"180\" height=\"72\" rx=\"5\" fill=\"#efe4cb\"/><text x=\"324\" y=\"51\" text-anchor=\"middle\" font-size=\"16\" fill=\"#725e32\">Event state</text><text x=\"324\" y=\"74\" text-anchor=\"middle\" font-size=\"12\" fill=\"#8c7b56\">timing / amplitude</text><path d=\"M424 55 H454 L448 50 M454 55 L448 60\" fill=\"none\" stroke=\"#8d9a9a\" stroke-width=\"2\"/><rect x=\"464\" y=\"20\" width=\"188\" height=\"72\" rx=\"5\" fill=\"#dce8de\"/><text x=\"558\" y=\"51\" text-anchor=\"middle\" font-size=\"16\" fill=\"#41654b\">Decision replay</text><text x=\"558\" y=\"74\" text-anchor=\"middle\" font-size=\"12\" fill=\"#6d8a72\">constraints / consequences</text></svg><figcaption>Figure 1. A conceptual evaluation chain. Arrows show the intended information flow, not measured causal effects.</figcaption></figure>",
+          "text_sha256": "c8f86af06b99b110488eb38a3f54d7a6d29d771d16e608c51d09411ab1a37452"
+        }
+      ]
+    },
+    {
+      "id": "protocol",
+      "title": "02 Protocol / 方法与证据",
+      "blocks": [
+        {
+          "id": "p3",
+          "kind": "paragraph",
+          "locator": "自写示例 ¶3",
+          "html": "<p>The protocol freezes the historical information available at each decision time, evaluates event timing and amplitude separately, and replays a fixed decision policy. Paired comparisons on the same episodes isolate the effect of changing the forecast input.</p>",
+          "text_sha256": "558f8b11278e17249be547b458a613055e48b04c695f5de6e79f5f3a65fd4d79"
+        },
+        {
+          "id": "eq1",
+          "kind": "equation",
+          "locator": "自写目标函数，仅示意",
+          "html": "<div><math display=\"block\" xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>L</mi><mo>=</mo><msub><mi>w</mi><mi>t</mi></msub><msub><mi>e</mi><mi>timing</mi></msub><mo>+</mo><msub><mi>w</mi><mi>a</mi></msub><msub><mi>e</mi><mi>amplitude</mi></msub></mrow></math><p>The weights encode a declared evaluation objective; they are not estimated deployment benefits.</p></div>",
+          "text_sha256": "4911810b3c43a244520c1c6a474c31f6cf5bec8a8e60d89364fdad40d10ad6b7"
+        },
+        {
+          "id": "table1",
+          "kind": "table",
+          "locator": "自写评价设计表，无实测结果",
+          "html": "<table><caption>Table 1. What each evaluation layer can establish.</caption><thead><tr><th>Layer</th><th>Observable</th><th>Supported claim</th></tr></thead><tbody><tr><td>Forecast</td><td>Timing / amplitude error</td><td>Prediction fidelity</td></tr><tr><td>Replay</td><td>Feasible actions / policy loss</td><td>Conditional decision utility</td></tr><tr><td>Field study</td><td>Observed deployment outcomes</td><td>Operational validity</td></tr></tbody></table>",
+          "text_sha256": "5af9a83837ac21e08990a080b5ea7e303973fbfb20d68bdab1679bbf5387e3b0"
+        },
+        {
+          "id": "box1",
+          "kind": "box",
+          "locator": "自写证据边界框",
+          "html": "<blockquote><p><strong>Evidence boundary.</strong> This teaching example contains no measured performance gains. A completed study would need paired outcomes, uncertainty estimates, and a field protocol before making a deployment claim.</p></blockquote>",
+          "text_sha256": "d98253fee2b8066fe653989d8d6da9d8a8059fe16460e183c30521ae260b721b"
+        }
+      ]
+    },
+    {
+      "id": "boundary",
+      "title": "03 Boundary / 让步与结论",
+      "blocks": [
+        {
+          "id": "p4",
+          "kind": "paragraph",
+          "locator": "自写示例 ¶4",
+          "html": "<p>However, a fixed-policy replay does not establish live deployment value. It controls one source of variation but leaves policy adaptation and distribution shift outside the comparison. A field study is a separate evidential step.</p>",
+          "text_sha256": "24266ed0a572ec5c89a2e8f2c68d41b826c62aeb584ef38ffe442e9be1d68560"
+        },
+        {
+          "id": "p5",
+          "kind": "paragraph",
+          "locator": "自写示例 ¶5",
+          "html": "<p>The resulting claim is conditional: event-aware evaluation can reveal decision-relevant differences that an average error metric conceals, provided the information boundary and replay policy are explicit. Empirical support must come from the actual paired evaluation.</p>",
+          "text_sha256": "d9c81d76b632be245db006ac460d867ea560b0bf9de468619562034ee831b024"
+        },
+        {
+          "id": "ref1",
+          "kind": "reference",
+          "locator": "自写示例来源声明",
+          "html": "<p>Source: an original teaching note created for the Paper Reader demonstration. No external paper, dataset, model ranking, or empirical result is represented.</p>",
+          "text_sha256": "95cc9d48fc6b29fa61107c6a462c3738373fbf84959ef61f06333ccaecf20c4a"
+        }
+      ]
+    }
+  ]
+}

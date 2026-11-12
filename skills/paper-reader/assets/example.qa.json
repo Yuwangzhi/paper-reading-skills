@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "errors": [],
+  "mode": "demo",
+  "counts": {
+    "paragraph": 5,
+    "figure": 1,
+    "equation": 1,
+    "table": 1,
+    "box": 1,
+    "reference": 1
+  },
+  "blocks": 10,
+  "source_sha256": "",
+  "pdf_sha256": null,
+  "scope": "inventory-to-HTML structural verification; not semantic or visual review"
+}

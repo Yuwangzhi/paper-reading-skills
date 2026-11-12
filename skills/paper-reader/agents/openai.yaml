@@ -1,0 +1,4 @@
+interface:
+  display_name: "双语批注阅读"
+  short_description: "将原 PDF、双语批注 HTML、笔记与生成源按论文归档，检查覆盖与相对链接"
+  default_prompt: "使用 $paper-reader，把这篇论文制作为配套阅读文件夹，保存原 PDF、完整英中批注 HTML、笔记、生成源和检查记录，重点说明论证结构。"

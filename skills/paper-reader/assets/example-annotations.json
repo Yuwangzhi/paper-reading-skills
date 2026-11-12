@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "blocks": {
+    "p1": {
+      "translation": "预测精度高，并不意味着据此作出的决策一定可靠。负荷峰值附近很小的时点偏差，也可能改变可行的行动；而这类偏差在平均预测误差中所占的比重未必很大。",
+      "function": "引出问题",
+      "role": "从平均误差与行动后果的不一致，导出评价对象需要扩展。",
+      "critique": "用临界事件构造反例，说明现有指标可能遗漏什么；这里是机制推理，尚非实测证据。",
+      "dimension": "concept",
+      "highlights": [
+        {
+          "text": "the decision built on it is unreliable",
+          "kind": "concept"
+        }
+      ]
+    },
+    "p2": {
+      "translation": "本文主张把预测误差与其所支持的决策联系起来评价。按事件条件划分的评价将普通时段与决策关键事件分开，使二者之间的关系变得可见。",
+      "function": "提出核心论点",
+      "role": "回应上一段的问题，并引入组织全文的关键概念。",
+      "critique": "主张与概念紧邻出现，读者容易理解评价为何需要分层；后文仍须用实际比较支撑其价值。",
+      "dimension": "thesis",
+      "highlights": [
+        {
+          "text": "evaluation should connect forecast errors to the decisions they support",
+          "kind": "thesis"
+        },
+        {
+          "text": "event-conditioned evaluation",
+          "kind": "concept"
+        }
+      ]
+    },
+    "framework": {
+      "translation": "图1展示概念性的评价链：以可用信息产生预测，提取事件时点与幅值状态，再在约束条件下回放决策。箭头表示拟定的信息流，未表示已经测得的因果效应。",
+      "function": "概括研究框架",
+      "role": "把核心主张拆成可检查的三个环节，为后面的实验职责分工。",
+      "critique": "框架图有助于界定模块间的输入输出；仅画出连接关系不足以证明下游收益。",
+      "dimension": "method",
+      "highlights": []
+    },
+    "p3": {
+      "translation": "评价协议固定每个决策时点实际可获得的历史信息，分别衡量事件时点和幅值，再用固定决策策略进行回放。对同一组事件做配对比较，可以考察更换预测输入带来的差异。",
+      "function": "说明方法",
+      "role": "把抽象主张转为可复现的比较协议，连接任务定义和证据。",
+      "critique": "控制信息与策略有助于缩小比较中的变动来源；若还改变其他输入，就不能把差异全部归于预测。",
+      "dimension": "method",
+      "highlights": [
+        {
+          "text": "freezes the historical information",
+          "kind": "method"
+        },
+        {
+          "text": "Paired comparisons on the same episodes",
+          "kind": "method"
+        }
+      ]
+    },
+    "eq1": {
+      "translation": "示意损失由事件时点误差和幅值误差加权构成。权重体现预先声明的评价目标，不能被解释为已经估计出的部署收益。",
+      "function": "给出评价定义",
+      "role": "明确比较口径，防止目标函数与业务收益混淆。",
+      "critique": "权重需要在实验前说明来源并做敏感性分析；公式本身不构成效果证据。",
+      "dimension": "method",
+      "highlights": [
+        {
+          "text": "not estimated deployment benefits",
+          "kind": "concession"
+        }
+      ]
+    },
+    "table1": {
+      "translation": "表1对应三层证据：预测层观察时点和幅值误差，只能支持预测保真度；回放层观察可行动作和策略损失，可支持有条件的决策效用；现场研究观察实际部署结果，才进一步涉及运行有效性。",
+      "function": "划分证据层级",
+      "role": "将每种观察量与能支持的结论对应，避免论证越级。",
+      "critique": "这是一张评价设计表，不是实验结果表。读者应检查正文结论有没有超出对应的证据层级。",
+      "dimension": "evidence",
+      "highlights": [
+        {
+          "text": "Conditional decision utility",
+          "kind": "evidence"
+        }
+      ]
+    },
+    "box1": {
+      "translation": "证据边界：本教学示例没有测得任何性能提升。完整研究需要配对结果、不确定性估计和现场协议，才能进一步讨论部署效果。",
+      "function": "限定证据范围",
+      "role": "在读者可能把设计当作结果之前，明确当前材料的性质。",
+      "critique": "主动区分示意与实证；正式论文的主张应由真实实验支撑，不能直接复用示例中的效果叙述。",
+      "dimension": "concession",
+      "highlights": [
+        {
+          "text": "contains no measured performance gains",
+          "kind": "concession"
+        }
+      ]
+    },
+    "p4": {
+      "translation": "不过，固定策略下的回放还不能确立真实部署价值。它控制了一项变动来源，但策略自适应和分布漂移并未包含在比较中，现场研究仍是独立的一步。",
+      "function": "处理异议",
+      "role": "回应由离线回放外推到实际部署时最直接的质疑。",
+      "critique": "让步与协议边界一致；若结论直接写成已获运行收益，这段限定就无法修补逻辑跳跃。",
+      "dimension": "concession",
+      "highlights": [
+        {
+          "text": "does not establish live deployment value",
+          "kind": "concession"
+        }
+      ]
+    },
+    "p5": {
+      "translation": "因此，结论带有明确条件：只要信息边界与回放策略定义清楚，事件导向评价就可能揭示平均误差所遮蔽的决策相关差异。是否得到实证支持，还要看实际配对评价的结果。",
+      "function": "收束核心主张",
+      "role": "将结论限定在研究设计真正能够回答的问题上。",
+      "critique": "回扣开头“平均误差可能遗漏什么”的问题，形成闭环；教学示例没有实验，不能据此声称方法已被验证。",
+      "dimension": "thesis",
+      "highlights": [
+        {
+          "text": "The resulting claim is conditional",
+          "kind": "thesis"
+        }
+      ]
+    },
+    "ref1": {
+      "translation": "来源说明：本文是为 Paper Reader 技能编写的教学示例，未代表任何外部论文、数据集、模型排名或实测结果。",
+      "function": "说明来源",
+      "role": "明确页面中的英文与图表均为自写演示内容。",
+      "critique": "实际论文阅读页应绑定用户所给的确切版本和可核查出处。",
+      "dimension": "method",
+      "highlights": []
+    }
+  },
+  "overview": {
+    "question": "平均预测误差能否说明决策是否可靠？",
+    "thesis": "把预测误差、事件状态与固定策略回放连起来，才能检验预测差异是否与决策相关。",
+    "evidence": "本页演示评价设计；真实证据应来自相同事件上的配对结果与不确定性估计。",
+    "rebuttal": "固定策略回放不包含自适应与分布漂移；部署价值需要现场研究。",
+    "conclusion": "条件明确的事件评价可提供更细的诊断，其经验价值仍由真实比较决定。",
+    "strongest": "问题、协议和结论围绕同一条“预测如何影响决策”的链条，证据职责清楚。",
+    "weakest": "这里只展示研究设计，没有实证结果，不能据此证明改进幅度或部署收益。"
+  }
+}
