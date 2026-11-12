@@ -40,7 +40,7 @@
 
 ![双语批注 HTML 演示](docs/preview.png)
 
-上图由仓库自带的演示数据生成：左栏英文原文与中文译文，右栏逐段批注；完整页面见 `skills/paper-reader/assets/example.html`。
+上图由仓库自带的演示数据生成：左栏英文原文与中文译文，右栏逐段批注。在线演示：<https://Yuwangzhi.github.io/paper-reading-skills/>；本地完整页面：`skills/paper-reader/assets/example.html`。
 
 ---
 

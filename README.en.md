@@ -40,7 +40,7 @@ You do not need to memorize commands or read the paper first. The skill picks th
 
 ![Bilingual annotated HTML demo](docs/preview.png)
 
-The screenshot is generated from the repository's own demo data: original English and Chinese translation on the left, paragraph annotation on the right. The full page is at `skills/paper-reader/assets/example.html`.
+The screenshot is generated from the repository's own demo data: original English and Chinese translation on the left, paragraph annotation on the right. Live demo: <https://Yuwangzhi.github.io/paper-reading-skills/>. Local full page: `skills/paper-reader/assets/example.html`.
 
 ---
 
