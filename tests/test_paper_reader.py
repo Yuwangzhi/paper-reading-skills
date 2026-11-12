@@ -165,5 +165,11 @@ class PaperReader(unittest.TestCase):
             self.assertFalse(check_bundle(moved)['ok'])
 
 
+    def test_published_demo_matches_packaged_example(self):
+        """Keep the GitHub Pages demo in sync with the skill's demo HTML."""
+        self.assertEqual((ROOT / "docs/index.html").read_bytes(),
+                         (SKILL / "assets/example.html").read_bytes())
+
+
 if __name__ == "__main__":
     unittest.main()
