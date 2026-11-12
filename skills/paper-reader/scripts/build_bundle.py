@@ -112,7 +112,7 @@ def build_bundle(source_path, annotations_path, destination, pdf=None, embed_pdf
             "# " + source["title"] + "\n\n[打开批注 HTML](02_阅读/" + html_name + ") · [阅读笔记](03_笔记/阅读笔记.md)" +
             (" · [打开原 PDF](01_原文/" + pdf_name + ")" if pdf else "\n\n原 PDF 尚未收集；不得声称已交付配套 PDF。") +
             "\n\n每篇论文一个文件夹。01 是来源，02 是阅读成品，03 是自己的笔记，04 保留源清单与译注，05 保留检查记录。复制整个文件夹可保持相对链接。\n\n" +
-            "重建：在本文件夹运行 `python <paper-reader>/scripts/build_reader.py --source 04_生成/source.json --annotations 04_生成/annotations.json --output 02_阅读/" + html_name +
+            "重建：在本文件夹运行 `python <paper-reader 技能目录>/scripts/build_reader.py --source 04_生成/source.json --annotations 04_生成/annotations.json --output 02_阅读/" + html_name +
             (" --pdf-link ../01_原文/" + pdf_name if pdf else "") + "`。检查记录重新生成在 HTML 旁，归入 05_检查即可。\n", encoding="utf-8")
         manifest = {"schema_version": 1, "title": source["title"], "mode": source["mode"],
                     "slug": stem, "entry": "02_阅读/" + html_name, "files": [
