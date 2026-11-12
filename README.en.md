@@ -2,29 +2,30 @@
 
 [![tests](https://github.com/Yuwangzhi/paper-reading-skills/actions/workflows/tests.yml/badge.svg)](https://github.com/Yuwangzhi/paper-reading-skills/actions/workflows/tests.yml)
 
-> Turn a paper into a readable page, and into a checkable understanding.
+> Turn a paper into a **readable page**, and into a **checkable understanding**.
 
 Two AI-agent skills for reading papers closely. They work with Claude Code, Codex, and other hosts that read `SKILL.md` files:
 
-- **`paper-reader`** turns a paper into a **source-faithful, offline, single-file bilingual HTML reader** with paragraph-level annotations, and archives the original PDF, your notes, the build sources, and QA records alongside it.
-- **`paper-tutor`** **reads with you**: one small piece at a time, one question at a time. You answer `1/2/3` plus a confidence level; it keeps glossary cards, a mistake log, a review schedule, and a one-page note.
+- **`paper-reader`** — turns a paper into a **source-faithful, offline, single-file bilingual HTML reader** with paragraph-level annotations, and archives the original PDF, your notes, the build sources, and QA records into one folder.
+- **`paper-tutor`** — **reads with you**: one small piece at a time, one question at a time. You answer `1/2/3` plus a confidence level; it keeps glossary cards, a mistake log, a review schedule, and a one-page note. **Read across several sittings and pick up where you left off, without starting over.**
 
-Use either skill alone, or chain them: `paper-reader` builds the HTML, then `paper-tutor` guides you through the same section/block anchors. **The scripts never call a model or a paid API.** Translation, annotation, question writing, and teaching are done by the agent you are already using; the scripts only extract, lay out, save, and check.
+Use either skill alone, or chain them: `paper-reader` builds the reading material, then `paper-tutor` guides you through the same section/block anchors. **The scripts never call a model or a paid API** — translation, annotation, question writing, and teaching are done by the agent you are already using; the scripts only extract, lay out, save, and check.
 
 [中文 README](README.md)
 
 ---
 
-## What each skill is for
+## Read → understand → remember
 
-| You ask | Skill | You get |
-|---|---|---|
-| "Turn this PDF into a bilingual, paragraph-annotated HTML page." | `paper-reader` | A paper folder: original PDF + offline HTML + notes + build sources + QA records |
-| "Walk me through this paper, one question at a time; I'll answer 1/2/3 and confidence." | `paper-tutor` | A guided session + glossary cards + answer log + review schedule + one-page note. No HTML/PDF. |
+| Stage | What you want | Skill | What you get |
+|---|---|---|---|
+| **Read** | Original, translation, and annotation side by side | `paper-reader` | A paper folder: original PDF + offline HTML + notes + build sources + QA records |
+| **Understand** | Check whether you actually got it, and where the evidence stops | `paper-tutor` | A guided session + glossary cards + answer log + review schedule |
+| **Remember** | Come back days later without starting over, and keep a one-page note | `paper-tutor` | `精读会话.json` + a one-page `精读笔记.md` |
 
-`paper-reader` produces **reading material**. `paper-tutor` produces a **record of the learning process**. The first is for archiving, sharing, and reading end to end; the second is for actually understanding the paper.
+`paper-reader` produces **reading material** — good for archiving, sharing, and reading end to end. `paper-tutor` produces a **record of the learning process** — good for actually understanding the paper and keeping what you learned.
 
-The bottleneck in paper reading is usually not a lack of summaries. It is not checking whether you actually understood the paper, or where the evidence stops supporting the claim. `paper-reader` puts the original, the translation, and the annotation on one page so they can be compared. `paper-tutor` turns understanding into a checkable record through questions and review.
+The bottleneck in paper reading is usually not a lack of summaries. It is not checking whether you actually understood the paper, or where the evidence stops supporting the claim. `paper-reader` puts the original, the translation, and the annotation on one page so they can be compared. `paper-tutor` turns understanding into a checkable, resumable record through questions and review.
 
 ### 30-second start
 
@@ -99,9 +100,7 @@ Without Playwright you can still build the HTML; only the automated real-browser
 
 ---
 
-## Quick start
-
-### 1. Bilingual annotated HTML
+## paper-reader: bilingual annotated HTML
 
 Tell the agent:
 
@@ -127,9 +126,10 @@ papers/FinTSB_2502.18834v3/
 │   ├── source.json              source inventory
 │   ├── annotations.json         translations, annotations, highlights
 │   └── images/...               local images when needed
-└── 05_检查/
-    ├── FinTSB.qa.json           structural QA record
-    └── bundle_manifest.json     relative paths and SHA-256
+├── 05_检查/
+│   ├── FinTSB.qa.json           structural QA record
+│   └── bundle_manifest.json     relative paths and SHA-256
+└── 06_精读/                     (optional) the paper-tutor session
 ```
 
 HTML features:
@@ -153,7 +153,9 @@ python3 skills/paper-reader/scripts/build_bundle.py \
 python3 skills/paper-reader/scripts/build_bundle.py --check papers/FinTSB_2502.18834v3
 ```
 
-### 2. Interactive reading
+---
+
+## paper-tutor: interactive reading
 
 Tell the agent:
 
@@ -231,7 +233,7 @@ paper-reading-skills/
 │       └── scripts/reading_session.py
 ├── tests/
 │   ├── test_paper_reader.py     source fidelity, coverage, highlights, build
-│   └── test_paper_tutor.py      state, scheduling, export, no-overwrite
+│   └── test_paper_tutor.py      state, scheduling, resume, export, no-overwrite
 ├── docs/
 │   ├── index.html               live demo page (GitHub Pages)
 │   └── preview.png              demo screenshot used by the README
